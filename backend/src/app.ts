@@ -20,10 +20,11 @@ app.get("/", (req, res, next) => {
 // Routes
 
 import authRoutes from "./routes/auth.route";
+import { errorMiddleware } from "./utils/errorMiddleware";
 
 app.use("/api/auth", authRoutes);
 
 // Global error handler
-// app.use(globalErrorHandler);
+app.use(errorMiddleware);
 
 export default app;

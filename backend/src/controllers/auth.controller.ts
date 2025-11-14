@@ -1,89 +1,180 @@
-import { User } from "../models/user.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+
 import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie";
-import { sendVerificationEmail, sendWelcomeEmail } from "../mailtrap/emails";
+import {
+  sendPasswordResetEmail,
+  sendResetSuccessEmail,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "../mailtrap/emails";
 
-const register = async (req: Request, res: Response) => {
-  try {
-    const { username, email, password } = req.body;
+import { User } from "../models/user.model";
+import { config } from "../config/config";
 
-    if (!username || !email || !password) {
-      throw new Error("All fields are required");
-    }
+import { ApiError } from "../utils/ApiError";
+import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
+import { AuthenticatedRequest } from "../middlewares/verifyToken";
 
-    const existingUser = await User.findOne({ email });
+const register = asyncHandler(async (req: Request, res: Response) => {
+  const { username, email, password } = req.body;
 
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
+  if (!username || !email || !password) {
+    throw new ApiError(400, "All fields are required");
+  }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const verifyToken = Math.floor(100000 + Math.random() * 900000).toString();
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError(400, "User already exists");
+  }
 
-    const newUser = new User({
-      username,
-      email,
-      verifyToken,
-      verifyTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-      password: hashedPassword,
-    });
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const verifyToken = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await newUser.save();
+  const newUser = new User({
+    username,
+    email,
+    verifyToken,
+    verifyTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    password: hashedPassword,
+  });
 
-    generateTokenAndSetCookie(res, newUser?._id.toString());
+  await newUser.save();
 
-    await sendVerificationEmail(email, verifyToken);
+  generateTokenAndSetCookie(res, newUser._id.toString());
+  await sendVerificationEmail(email, verifyToken);
 
-    res.status(201).json({
-      success: true,
+  return res.status(201).json(
+    new ApiResponse("User registered successfully", {
       user: { ...newUser.toObject(), password: undefined },
-      message: "User registered successfully",
-    });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+    })
+  );
+});
+
+const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
+  const { verifyToken } = req.body;
+
+  if (!verifyToken) {
+    throw new ApiError(400, "Verification code is required");
   }
-};
 
-const verifyEmail = async (req: Request, res: Response) => {
-  try {
-    const { verificationCode } = req.body;
+  const user = await User.findOne({
+    verifyToken,
+    verifyTokenExpires: { $gt: Date.now() },
+  });
 
-    if (!verificationCode) {
-      throw new Error("Verification code is required");
-    }
-
-    const user = await User.findOne({
-      verifyToken: verificationCode,
-      verifyTokenExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification code",
-      });
-    }
-
-    user.isVerified = true;
-    user.verifyToken = undefined;
-    user.verifyTokenExpires = undefined;
-
-    await user.save();
-
-    await sendWelcomeEmail(user.email, user.username);
-
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully",
-      user: {
-        ...user.toObject(),
-        password: undefined,
-      },
-    });
-  } catch (error: any) {
-    res.status(400).json({ success: false, message: error.message });
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired verification code");
   }
-};
 
-export { register, verifyEmail };
+  user.isVerified = true;
+  user.verifyToken = undefined;
+  user.verifyTokenExpires = undefined;
+  await user.save();
+
+  await sendWelcomeEmail(user.email, user.username);
+
+  return res.json(
+    new ApiResponse("Email verified successfully", {
+      user: { ...user.toObject(), password: undefined },
+    })
+  );
+});
+
+const login = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) throw new ApiError(400, "Invalid credentials");
+
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(400, "Invalid credentials");
+
+  const isValid = await bcrypt.compare(password, user.password);
+  if (!isValid) throw new ApiError(400, "Invalid credentials");
+
+  generateTokenAndSetCookie(res, user._id.toString());
+  user.lastLogin = new Date();
+  await user.save();
+
+  return res.json(
+    new ApiResponse("Login successful", {
+      token: res.getHeader("Authorization"),
+      ...user.toObject(),
+      password: undefined,
+    })
+  );
+});
+
+const logout = asyncHandler(async (req: Request, res: Response) => {
+  res.clearCookie("token");
+  return res.json(new ApiResponse("Logout successful"));
+});
+
+const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) throw new ApiError(400, "Email is required");
+
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(404, "User not found");
+
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  const resetTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+  user.resetPasswordToken = resetToken;
+  user.resetPasswordExpires = resetTokenExpiresAt;
+  await user.save();
+
+  await sendPasswordResetEmail(
+    user.email,
+    `${config.frontendDomain}/reset-password/${resetToken}`
+  );
+
+  return res.json(new ApiResponse("Password reset link sent to your email"));
+});
+
+const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { resetToken, newPassword } = req.body;
+
+  if (!resetToken || !newPassword) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = await User.findOne({
+    resetPasswordToken: resetToken,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+
+  if (!user) throw new ApiError(400, "Invalid or expired reset token");
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+  await sendResetSuccessEmail(user.email);
+
+  return res.json(new ApiResponse("Password reset successful"));
+});
+
+const checkAuth = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const user = await User.findById(req.userId).select("-password");
+
+    if (!user) throw new ApiError(404, "User not found");
+
+    return res.json(new ApiResponse("User authenticated", { user }));
+  }
+);
+
+export {
+  register,
+  verifyEmail,
+  login,
+  logout,
+  forgotPassword,
+  resetPassword,
+  checkAuth,
+};
