@@ -1,13 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
-  login,
-  register,
-  logoutRequest,
-  type RegisterPayload,
-  type LoginPayload,
+  loginService,
+  registerService,
+  logoutRequestService,
 } from "../api/authService";
-import type { AuthResponse, AuthState, User } from "@/types/auth";
+import type {
+  AuthResponse,
+  AuthState,
+  LoginPayload,
+  RegisterPayload,
+  User,
+} from "@/types/auth";
+import { AxiosError } from "axios";
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -22,11 +27,12 @@ export const useAuthStore = create<AuthState>()(
       registerUser: async (data: RegisterPayload) => {
         set({ isLoading: true, error: null });
         try {
-          const res: AuthResponse = await register(data);
+          const res: AuthResponse = await registerService(data);
           set({ user: res.user, token: res.token, isLoading: false });
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const error = err as AxiosError<{ message: string }>;
           set({
-            error: err.response?.data?.message || err.message,
+            error: error.response?.data?.message || error.message,
             isLoading: false,
           });
         }
@@ -35,11 +41,12 @@ export const useAuthStore = create<AuthState>()(
       loginUser: async (data: LoginPayload) => {
         set({ isLoading: true, error: null });
         try {
-          const res: AuthResponse = await login(data);
+          const res: AuthResponse = await loginService(data);
           set({ user: res.user, token: res.token, isLoading: false });
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const error = err as AxiosError<{ message: string }>;
           set({
-            error: err.response?.data?.message || err.message,
+            error: error.response?.data?.message || error.message,
             isLoading: false,
           });
         }
@@ -48,11 +55,12 @@ export const useAuthStore = create<AuthState>()(
       logoutUser: async () => {
         set({ isLoading: true, error: null });
         try {
-          await logoutRequest();
+          await logoutRequestService();
           set({ user: null, token: null, isLoading: false });
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const error = err as AxiosError<{ message: string }>;
           set({
-            error: err.response?.data?.message || err.message,
+            error: error.response?.data?.message || error.message,
             isLoading: false,
           });
         }

@@ -6,13 +6,17 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-
 import { Input } from "@/components/ui/input";
 import { registerValidator } from "@/lib/validators";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { registerService } from "@/api/authService";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
 
 export function Register({ ...props }: React.ComponentProps<typeof Card>) {
   const form = useForm<z.infer<typeof registerValidator>>({
@@ -26,13 +30,25 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
   });
 
   const {
-    register,
+    register: registerField,
     handleSubmit,
     formState: { errors },
   } = form;
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = (data: z.infer<typeof registerValidator>) => {
-    console.log("Form data:", data);
+  const onSubmit = async (data: z.infer<typeof registerValidator>) => {
+    setIsLoading(true);
+    try {
+      await registerService(data);
+      toast.success("Registration successful");
+
+      form.reset();
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      toast.error(error.response?.data?.message || error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -52,7 +68,7 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
                 id="username"
                 type="text"
                 placeholder="John Doe"
-                {...register("username")}
+                {...registerField("username")}
               />
               {errors.username && (
                 <FieldDescription className="text-red-500">
@@ -67,7 +83,7 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
                 id="email"
                 type="email"
                 placeholder="m@example.com"
-                {...register("email")}
+                {...registerField("email")}
               />
               {errors.email && (
                 <FieldDescription className="text-red-500">
@@ -82,7 +98,7 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
                 id="password"
                 type="password"
                 placeholder="**************"
-                {...register("password")}
+                {...registerField("password")}
               />
               {errors.password && (
                 <FieldDescription className="text-red-500">
@@ -99,7 +115,7 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
                 id="confirmPassword"
                 type="password"
                 placeholder="**************"
-                {...register("confirmPassword")}
+                {...registerField("confirmPassword")}
               />
               {errors.confirmPassword && (
                 <FieldDescription className="text-red-500">
@@ -110,7 +126,14 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
 
             <FieldGroup>
               <Field>
-                <Button type="submit">Create Account</Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex items-center justify-center gap-2"
+                >
+                  {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isLoading ? "Creating..." : "Create Account"}
+                </Button>
                 <FieldDescription className="px-6 text-center">
                   Already have an account? <Link to="/login">Sign in</Link>
                 </FieldDescription>

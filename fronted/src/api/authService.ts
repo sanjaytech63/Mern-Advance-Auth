@@ -8,31 +8,33 @@ import type {
 } from "@/types/auth";
 import api from "./api";
 
-export const register = async (
+export const registerService = async (
   data: RegisterPayload
 ): Promise<AuthResponse> => {
   const response = await api.post("/auth/register", data);
   return response.data;
 };
 
-export const login = async (data: LoginPayload): Promise<AuthResponse> => {
+export const loginService = async (
+  data: LoginPayload
+): Promise<AuthResponse> => {
   const response = await api.post("/auth/login", data);
   return response.data;
 };
 
-export const logoutRequest = async (): Promise<MessageResponse> => {
+export const logoutRequestService = async (): Promise<MessageResponse> => {
   const response = await api.post("/auth/logout");
   return response.data;
 };
 
-export const forgotPassword = async (
+export const forgotPasswordService = async (
   data: ForgotPasswordPayload
 ): Promise<MessageResponse> => {
   const response = await api.post("/auth/forgot-password", data);
   return response.data;
 };
 
-export const resetPassword = async (
+export const resetPasswordService = async (
   resetToken: string,
   data: ResetPasswordPayload
 ): Promise<MessageResponse> => {
@@ -40,7 +42,7 @@ export const resetPassword = async (
   return response.data;
 };
 
-export const checkAuth = async (): Promise<AuthResponse> => {
+export const checkAuthService = async (): Promise<AuthResponse> => {
   const response = await api.get("/auth/check-auth");
   return response.data;
 };
