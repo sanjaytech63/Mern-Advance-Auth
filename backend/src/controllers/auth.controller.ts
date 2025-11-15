@@ -126,8 +126,6 @@ const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
   user.resetPasswordToken = resetToken;
   user.resetPasswordExpires = resetTokenExpiresAt;
 
-  console.log(user);
-
   await user.save();
 
   await sendPasswordResetEmail(

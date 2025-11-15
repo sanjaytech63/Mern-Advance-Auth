@@ -37,11 +37,11 @@ export interface LoginPayload {
 
 export interface MessageResponse {
   success: boolean;
-  message: string;
+  message: string | null;
 }
 
 export interface ForgotPasswordPayload {
-  email: string;
+  email: string | null;
 }
 
 export interface ResetPasswordPayload {

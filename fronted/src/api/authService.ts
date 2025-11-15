@@ -22,6 +22,13 @@ export const loginService = async (
   return response.data;
 };
 
+export const verifyEmailService = async (
+  code: string | number
+): Promise<MessageResponse> => {
+  const response = await api.post("/auth/verify-email", { code });
+  return response.data;
+};
+
 export const logoutRequestService = async (): Promise<MessageResponse> => {
   const response = await api.post("/auth/logout");
   return response.data;

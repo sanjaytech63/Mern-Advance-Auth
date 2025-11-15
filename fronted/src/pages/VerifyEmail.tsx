@@ -10,21 +10,27 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
-import { forgotPasswordService } from "@/api/authService";
+import { useNavigate } from "react-router-dom";
+import { verifyEmailService } from "@/api/authService";
 
-export function ForgotPassword({
-  ...props
-}: React.ComponentProps<typeof Card>) {
-  const [email, setEmail] = useState<string>("");
+export function VerifyEmail({ ...props }: React.ComponentProps<typeof Card>) {
+  const [code, setCode] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (code.length !== 6) {
+      toast.error("Please enter a valid 6-digit code");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const res = await forgotPasswordService({ email });
-      toast.success(res.message || "Password reset email sent!");
-      setEmail("");
+      const res = await verifyEmailService(code);
+      toast.success(res.message || "Email verified successfully!");
+      setCode("");
+      navigate("/login");
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message: string } };
@@ -42,24 +48,26 @@ export function ForgotPassword({
         <Card {...props}>
           <CardHeader>
             <CardTitle className="text-center font-bold">
-              Forgot Password
+              Verify Your Email
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <FieldLabel htmlFor="code">
+                    6-Digit Verification Code
+                  </FieldLabel>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    id="code"
+                    type="text"
+                    placeholder="Enter 6-digit code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    maxLength={6}
                   />
                   <FieldDescription>
-                    We'll send a password reset link to your email.
+                    Check your email for the verification code.
                   </FieldDescription>
                 </Field>
 
@@ -70,7 +78,7 @@ export function ForgotPassword({
                     className="flex items-center justify-center gap-2"
                   >
                     {isLoading && <Loader className="w-4 h-4 animate-spin" />}
-                    {isLoading ? "Sending..." : "Send Reset Link"}
+                    {isLoading ? "Verifying..." : "Verify Email"}
                   </Button>
                 </Field>
               </FieldGroup>
