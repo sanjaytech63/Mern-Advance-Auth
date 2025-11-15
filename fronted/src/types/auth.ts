@@ -34,3 +34,16 @@ export interface LoginPayload {
   email: string;
   password: string;
 }
+
+export interface MessageResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  newPassword: string;
+}
