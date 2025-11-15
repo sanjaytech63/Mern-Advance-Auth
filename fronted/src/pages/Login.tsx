@@ -4,13 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
   FieldGroup,
@@ -59,16 +53,13 @@ export function Login() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center p-6 md:p-10 bg-gray-100">
+    <div className="flex min-h-screen w-full items-center justify-center">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
             <CardTitle className="text-center font-bold">
               Login to your account
             </CardTitle>
-            <CardDescription className="text-center">
-              Enter your email and password to login
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -114,7 +105,7 @@ export function Login() {
                 <Field>
                   <Button
                     type="submit"
-                    className="flex items-center justify-center gap-2"
+                    className="flex items-center justify-center cursor-pointer gap-2"
                     disabled={isLoading}
                   >
                     {isLoading && <Loader className="h-4 w-4 animate-spin" />}

@@ -54,7 +54,7 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
   };
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-gray-100">
+    <div className="flex min-h-svh w-full items-center justify-center ">
       <div className="w-full max-w-sm">
         <Card {...props}>
           <CardHeader>
