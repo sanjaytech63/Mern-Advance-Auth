@@ -25,7 +25,7 @@ export const loginService = async (
 export const verifyEmailService = async (
   code: string | number
 ): Promise<MessageResponse> => {
-  const response = await api.post("/auth/verify-email", { code });
+  const response = await api.post("/auth/verify-email", { verifyToken: code });
   return response.data;
 };
 
