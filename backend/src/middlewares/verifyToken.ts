@@ -19,8 +19,9 @@ export const verifyToken = asyncHandler(
     const token = authHeader.split(" ")[1];
 
     try {
-      const decoded = jwt.verify(token, config.jwtSecret) as { userId: string };
-      req.userId = decoded.userId;
+      const decoded = jwt.verify(token, config.jwtSecret) as { id: string };
+
+      req.userId = decoded.id;
       next();
     } catch (error: any) {
       if (error.name === "TokenExpiredError") {

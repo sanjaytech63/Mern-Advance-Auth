@@ -125,6 +125,9 @@ const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
 
   user.resetPasswordToken = resetToken;
   user.resetPasswordExpires = resetTokenExpiresAt;
+
+  console.log(user);
+
   await user.save();
 
   await sendPasswordResetEmail(
@@ -136,9 +139,10 @@ const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const resetPassword = asyncHandler(async (req: Request, res: Response) => {
-  const { resetToken, newPassword } = req.body;
+  const resetToken = req.params.resetToken;
+  const { password } = req.body;
 
-  if (!resetToken || !newPassword) {
+  if (!resetToken || !password) {
     throw new ApiError(400, "All fields are required");
   }
 
@@ -149,7 +153,7 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
 
   if (!user) throw new ApiError(400, "Invalid or expired reset token");
 
-  user.password = await bcrypt.hash(newPassword, 10);
+  user.password = await bcrypt.hash(password, 10);
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
 

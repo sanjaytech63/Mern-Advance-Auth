@@ -12,6 +12,8 @@ const generateTokenAndSetCookie = (res: any, userId: string) => {
     sameSite: "strict",
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   });
+
+  res.setHeader("Authorization", `Bearer ${token}`);
 };
 
 export default generateTokenAndSetCookie;

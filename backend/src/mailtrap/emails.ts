@@ -28,7 +28,6 @@ export const sendVerificationEmail = async (
       category: "Email Verification",
     });
 
-    console.log("Email sent successfully", response);
   } catch (error: unknown) {
     console.error("Error sending verification email", error);
     throw new Error(
@@ -57,7 +56,6 @@ export const sendWelcomeEmail = async (
       // ),
     });
 
-    console.log("Welcome email sent successfully", response);
   } catch (error: unknown) {
     console.error("Error sending welcome email", error);
     throw new Error(
@@ -83,7 +81,6 @@ export const sendPasswordResetEmail = async (
       category: "Password Reset",
     });
 
-    console.log("Password reset email sent successfully", response);
   } catch (error: unknown) {
     console.error("Error sending password reset email", error);
     throw new Error(
@@ -106,7 +103,6 @@ export const sendResetSuccessEmail = async (email: string): Promise<void> => {
       category: "Password Reset",
     });
 
-    console.log("Password reset success email sent successfully", response);
   } catch (error: unknown) {
     console.error("Error sending password reset success email", error);
     throw new Error(
