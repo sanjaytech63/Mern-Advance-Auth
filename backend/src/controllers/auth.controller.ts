@@ -101,8 +101,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
   return res.json(
     new ApiResponse("Login successful", {
       token: res.getHeader("Authorization"),
-      ...user.toObject(),
-      password: undefined,
+      user: { ...user.toObject(), password: undefined },
     })
   );
 });

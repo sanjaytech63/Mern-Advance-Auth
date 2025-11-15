@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AxiosError } from "axios";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +21,6 @@ import { Input } from "@/components/ui/input";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
-import { loginService } from "@/api/authService";
 import { useAuthStore } from "@/store/useAuthStore";
 import { loginValidator } from "@/lib/validators";
 
@@ -31,8 +28,7 @@ type LoginFormData = z.infer<typeof loginValidator>;
 
 export function Login() {
   const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
-  const [isLoading, setIsLoading] = useState(false);
+  const { isLoading, loginUser } = useAuthStore();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginValidator),
@@ -49,18 +45,16 @@ export function Login() {
   } = form;
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
     try {
-      const res = await loginService(data);
-      setUser(res.user, res.token);
-      toast.success("Login successful!");
-      navigate("/");
-      form.reset();
+      const res = await loginUser(data);
+      if (res.success) {
+        toast.success("Logged in successfully!");
+        navigate("/");
+        form.reset();
+      }
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
       toast.error(error.response?.data?.message || error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 

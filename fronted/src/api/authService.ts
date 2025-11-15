@@ -4,7 +4,6 @@ import type {
   LoginPayload,
   MessageResponse,
   RegisterPayload,
-  ResetPasswordPayload,
 } from "@/types/auth";
 import api from "./api";
 
@@ -43,9 +42,12 @@ export const forgotPasswordService = async (
 
 export const resetPasswordService = async (
   resetToken: string,
-  data: ResetPasswordPayload
+  payload: { password: string }
 ): Promise<MessageResponse> => {
-  const response = await api.post(`/auth/reset-password/${resetToken}`, data);
+  const response = await api.post(
+    `/auth/reset-password/${resetToken}`,
+    payload
+  );
   return response.data;
 };
 

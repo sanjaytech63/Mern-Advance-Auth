@@ -23,8 +23,10 @@ export function ForgotPassword({
     setIsLoading(true);
     try {
       const res = await forgotPasswordService({ email });
-      toast.success(res.message || "Password reset email sent!");
-      setEmail("");
+      if (res.success) {
+        toast.success(res.message || "Password reset email sent!");
+        setEmail("");
+      }
     } catch (err: unknown) {
       const error = err as {
         response?: { data?: { message: string } };
@@ -67,7 +69,7 @@ export function ForgotPassword({
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2"
+                    className="flex items-center cursor-pointer justify-center gap-2"
                   >
                     {isLoading && <Loader className="w-4 h-4 animate-spin" />}
                     {isLoading ? "Sending..." : "Send Reset Link"}

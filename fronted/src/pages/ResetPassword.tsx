@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 import { resetPasswordService } from "@/api/authService";
+import { PasswordInput } from "@/components/ui/passwordInput";
 
 export function ResetPassword({ ...props }: React.ComponentProps<typeof Card>) {
   const { resetToken } = useParams<{ resetToken: string }>();
@@ -24,9 +24,7 @@ export function ResetPassword({ ...props }: React.ComponentProps<typeof Card>) {
     setIsLoading(true);
     try {
       if (!resetToken) throw new Error("Invalid token");
-      const res = await resetPasswordService(resetToken, {
-        newPassword: password,
-      });
+      const res = await resetPasswordService(resetToken, { password });
       toast.success(res.message || "Password reset successful!");
       setPassword("");
       setConfirmPassword("");
@@ -56,13 +54,11 @@ export function ResetPassword({ ...props }: React.ComponentProps<typeof Card>) {
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="password">New Password</FieldLabel>
-                  <Input
+                  <PasswordInput
                     id="password"
-                    type="password"
                     placeholder="********"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
                   />
                 </Field>
 
@@ -70,13 +66,11 @@ export function ResetPassword({ ...props }: React.ComponentProps<typeof Card>) {
                   <FieldLabel htmlFor="confirmPassword">
                     Confirm Password
                   </FieldLabel>
-                  <Input
+                  <PasswordInput
                     id="confirmPassword"
-                    type="password"
                     placeholder="********"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
                   />
                 </Field>
 
@@ -84,7 +78,7 @@ export function ResetPassword({ ...props }: React.ComponentProps<typeof Card>) {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2"
+                    className="flex items-center cursor-pointer justify-center gap-2"
                   >
                     {isLoading && <Loader className="w-4 h-4 animate-spin" />}
                     {isLoading ? "Resetting..." : "Reset Password"}

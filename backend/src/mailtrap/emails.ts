@@ -17,7 +17,7 @@ export const sendVerificationEmail = async (
   const recipient: Recipient[] = [{ email }];
 
   try {
-    const response = await mailtrapClient.send({
+    await mailtrapClient.send({
       from: sender,
       to: recipient,
       subject: "Verify your email",
@@ -27,7 +27,6 @@ export const sendVerificationEmail = async (
       ),
       category: "Email Verification",
     });
-
   } catch (error: unknown) {
     console.error("Error sending verification email", error);
     throw new Error(
@@ -45,17 +44,16 @@ export const sendWelcomeEmail = async (
   const recipient: Recipient[] = [{ email }];
 
   try {
-    const response = await mailtrapClient.send({
+    await mailtrapClient.send({
       from: sender,
       to: recipient,
       subject: "Welcome to Auth Company!",
       html: WELCOME_EMAIL_TEMPLATE.replace("{name}", name)
-      // .replace(
-      //   "{loginURL}",
-      //   "https://yourapp.com/login"
-      // ),
+      .replace(
+        "{loginURL}",
+        "http://localhost:5173/login"
+      ),
     });
-
   } catch (error: unknown) {
     console.error("Error sending welcome email", error);
     throw new Error(
@@ -73,14 +71,13 @@ export const sendPasswordResetEmail = async (
   const recipient: Recipient[] = [{ email }];
 
   try {
-    const response = await mailtrapClient.send({
+    await mailtrapClient.send({
       from: sender,
       to: recipient,
       subject: "Reset your password",
       html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
       category: "Password Reset",
     });
-
   } catch (error: unknown) {
     console.error("Error sending password reset email", error);
     throw new Error(
@@ -95,14 +92,13 @@ export const sendResetSuccessEmail = async (email: string): Promise<void> => {
   const recipient: Recipient[] = [{ email }];
 
   try {
-    const response = await mailtrapClient.send({
+    await mailtrapClient.send({
       from: sender,
       to: recipient,
       subject: "Password Reset Successful",
       html: PASSWORD_RESET_SUCCESS_TEMPLATE,
       category: "Password Reset",
     });
-
   } catch (error: unknown) {
     console.error("Error sending password reset success email", error);
     throw new Error(

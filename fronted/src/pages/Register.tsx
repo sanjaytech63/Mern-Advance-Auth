@@ -12,13 +12,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { registerService } from "@/api/authService";
-import { useState } from "react";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export function Register({ ...props }: React.ComponentProps<typeof Card>) {
+  const { isLoading, registerUser } = useAuthStore();
+
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof registerValidator>>({
@@ -36,21 +37,19 @@ export function Register({ ...props }: React.ComponentProps<typeof Card>) {
     handleSubmit,
     formState: { errors },
   } = form;
-  const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data: z.infer<typeof registerValidator>) => {
-    setIsLoading(true);
     try {
-      await registerService(data);
-      toast.success("Registration successful! Check your email.");
-      navigate("/verify-email");
+      const res = await registerUser(data);
 
-      form.reset();
+      if (res.success) {
+        toast.success("Registration successful! Check your email.");
+        navigate("/verify-email");
+        form.reset();
+      }
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
       toast(error.response?.data?.message || error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
